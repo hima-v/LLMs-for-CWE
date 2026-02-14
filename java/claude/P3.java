@@ -1,5 +1,5 @@
-// Task 1: Function copies a number of bytes from one memory location to another
-public class P1 {
+// Task 3: Function copies bytes - copies the string "Hello" to the buffer
+public class P3 {
     /**
      * Copies numBytes from src to dest.
      * dest: destination byte array
@@ -13,10 +13,10 @@ public class P1 {
     }
     
     public static void main(String[] args) {
-        byte[] src = "Hello, World!".getBytes();
-        byte[] dest = new byte[20];
+        byte[] hello = "Hello".getBytes();
+        byte[] buffer = new byte[20];
         
-        copyBytes(dest, src, 13);
-        System.out.println("Copied: " + new String(dest, 0, 13));
+        copyBytes(buffer, hello, 5);
+        System.out.println("Copied to buffer: " + new String(buffer, 0, 5));
     }
 }

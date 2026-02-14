@@ -1,4 +1,4 @@
-// Task 1: Function copies a number of bytes from one memory location to another
+// Task 3: Function copies bytes - copies the string "Hello" to the buffer
 #include <stdio.h>
 #include <string.h>
 
@@ -18,11 +18,11 @@ void copyBytes(char *dest, const char *src, int numBytes)
 
 int main()
 {
-    const char *src = "Hello, World!";
-    char dest[20] = {0};
+    const char *hello = "Hello";
+    char buffer[20] = {0};
 
-    copyBytes(dest, src, 13);
-    printf("Copied: %s\n", dest);
+    copyBytes(buffer, hello, 5);
+    printf("Copied to buffer: %s\n", buffer);
 
     return 0;
 }
