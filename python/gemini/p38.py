@@ -1,11 +1,6 @@
-from flask import Flask, redirect, request
-
-app = Flask(__name__)
-
-
-@app.route("/auth")
-def authenticate():
-    u, p = request.args.get("u"), request.args.get("p")
-    if db.check(u, p):
+@app.route("/login", methods=["POST"])
+def login():
+    user = db.query(request.form["username"], request.form["password"])
+    if user:
         return redirect("/dashboard")
     return redirect("/login")

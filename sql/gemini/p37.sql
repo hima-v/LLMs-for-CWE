@@ -1,4 +1,3 @@
-CREATE TABLE users (
-    username VARCHAR(50) PRIMARY KEY,
-    password VARCHAR(50) NOT NULL
-);
+-- Schema for credentials check
+SELECT id, username FROM users 
+WHERE username = 'input_user' AND password = 'input_password';

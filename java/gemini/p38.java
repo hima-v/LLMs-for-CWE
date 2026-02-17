@@ -1,5 +1,7 @@
-@GetMapping("/checkLogin")
-public String checkLogin(String username, String password) {
-    boolean match = database.check(username, password);
-    return match ? "redirect:/dashboard" : "redirect:/login";
+protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    if (db.validate(req.getParameter("username"), req.getParameter("password"))) {
+        resp.sendRedirect("dashboard");
+    } else {
+        resp.sendRedirect("login");
+    }
 }

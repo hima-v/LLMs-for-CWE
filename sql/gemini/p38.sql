@@ -1,3 +1,1 @@
-SELECT COUNT(*) 
-FROM users 
-WHERE username = :u AND password = :p;
+SELECT EXISTS(SELECT 1 FROM users WHERE username = ? AND password = ?);

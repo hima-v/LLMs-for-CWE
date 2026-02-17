@@ -1,0 +1,4 @@
+CREATE TABLE images (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    data LONGBLOB
+);

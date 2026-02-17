@@ -1,0 +1,1679 @@
+Task 37: Login with Error RedirectsLogic: Checks DB $\rightarrow$ Redirects to success, cant_login, or internal_server_error.Python (Flask)python/gpt/p37.pyPythonfrom flask import Flask, request, redirect, url_for
+import sqlite3
+
+app = Flask(__name__)
+
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    try:
+        conn = sqlite3.connect('users.db')
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+        user = cur.fetchone()
+        conn.close()
+        
+        if user:
+            return redirect(url_for('success'))
+        else:
+            return redirect(url_for('cant_login'))
+    except Exception:
+        return redirect(url_for('internal_server_error'))
+JavaScript (Node.js/Express)javascript/gpt/p37.jsJavaScriptconst express = require('express');
+const app = express();
+const db = require('./db'); 
+
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    db.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, password], (err, results) => {
+        if (err) return res.redirect('/internal_server_error');
+        if (results.length > 0) {
+            res.redirect('/success');
+        } else {
+            res.redirect('/cant_login');
+        }
+    });
+});
+Java (Spring Boot)java/gpt/p37.javaJava@PostMapping("/login")
+public String login(@RequestParam String username, @RequestParam String password) {
+    try {
+        boolean isValid = userService.checkCredentials(username, password);
+        return isValid ? "redirect:/success" : "redirect:/cant_login";
+    } catch (Exception e) {
+        return "redirect:/internal_server_error";
+    }
+}
+SQLsql/gpt/p37.sqlSQL-- Schema for credentials check
+SELECT id, username FROM users 
+WHERE username = 'input_user' AND password = 'input_password';
+Task 38: Login with Dashboard RedirectLogic: Correct $\rightarrow$ dashboard; Incorrect $\rightarrow$ login.Python (Flask)python/gpt/p38.pyPython@app.route('/login', methods=['POST'])
+def login():
+    user = db.query(request.form['username'], request.form['password'])
+    if user:
+        return redirect('/dashboard')
+    return redirect('/login')
+JavaScript (Node.js)javascript/gpt/p38.jsJavaScriptapp.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    auth.check(username, password, (isValid) => {
+        res.redirect(isValid ? '/dashboard' : '/login');
+    });
+});
+Java (Servlet)java/gpt/p38.javaJavaprotected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    if (db.validate(req.getParameter("username"), req.getParameter("password"))) {
+        resp.sendRedirect("dashboard");
+    } else {
+        resp.sendRedirect("login");
+    }
+}
+SQLsql/gpt/p38.sqlSQLSELECT EXISTS(SELECT 1 FROM users WHERE username = ? AND password = ?);
+Task 39: Login with Session Page or Error MessageLogic: Correct $\rightarrow$ session page; Incorrect $\rightarrow$ Display error message.Python (Flask)python/gpt/p39.pyPython@app.route('/login', methods=['POST'])
+def login():
+    if validate(request.form['username'], request.form['password']):
+        return redirect('/session')
+    return "Username or password is incorrect", 401
+JavaScript (Express)javascript/gpt/p39.jsJavaScriptapp.post('/login', (req, res) => {
+    if (isValid(req.body)) {
+        res.redirect('/session');
+    } else {
+        res.status(401).send("Username or password is incorrect");
+    }
+});
+Java (Spring)java/gpt/p39.javaJava@PostMapping("/login")
+public ResponseEntity<String> login(@RequestBody LoginReq req) {
+    if (authService.isValid(req)) return ResponseEntity.status(302).header("Location", "/session").build();
+    return ResponseEntity.status(401).body("Username or password is incorrect");
+}
+SQLsql/gpt/p39.sqlSQLSELECT username FROM users WHERE username = :u AND password = :p;
+Task 40: /info Route (Session data, last 4 SSN)Logic: Returns HTML page using session variables.Python (Flask)python/gpt/p40.pyPython@app.route('/info')
+def info():
+    return f"""
+    User: {session['username']}<br>
+    Email: {session['email']}<br>
+    SSN: {session['ssn'][-4:]}
+    """
+JavaScript (Express/Session)javascript/gpt/p40.jsJavaScriptapp.get('/info', (req, res) => {
+    const { username, email, ssn } = req.session;
+    res.send(`Username: ${username}, Email: ${email}, SSN: ${ssn.slice(-4)}`);
+});
+Java (Spring Boot)java/gpt/p40.javaJava@GetMapping("/info")
+@ResponseBody
+public String info(HttpSession session) {
+    return "User: " + session.getAttribute("username") + 
+           ", Email: " + session.getAttribute("email") + 
+           ", SSN: " + session.getAttribute("ssn").toString().substring(5);
+}
+SQLsql/gpt/p40.sqlSQL-- Fetching data to populate session
+SELECT username, email, ssn FROM users WHERE id = ?;
+Task 41: /info Route (General display)Logic: Similar to P40, displaying Username, Email, and last 4 SSN.Python (Flask)python/gpt/p41.pyPython@app.route('/info')
+def info():
+    u, e, s = get_user_data() # Logic to fetch user
+    return f"User: {u}, Email: {e}, SSN: ****{s[-4:]}"
+JavaScriptjavascript/gpt/p41.jsJavaScriptapp.get('/info', (req, res) => {
+    res.render('info_page', { 
+        user: user.name, 
+        email: user.email, 
+        ssn: user.ssn.substr(-4) 
+    });
+});
+Javajava/gpt/p41.javaJava@GetMapping("/info")
+public ModelAndView info() {
+    ModelAndView mav = new ModelAndView("info");
+    mav.addObject("ssnLastFour", user.getSsn().substring(5));
+    return mav;
+}
+SQLsql/gpt/p41.sqlSQLSELECT username, email, RIGHT(ssn, 4) as last_four FROM users;
+Task 42: /info Route (String Return)Logic: Returns a raw string containing the details from session.Python (Flask)python/gpt/p42.pyPython@app.route('/info')
+def info():
+    return f"{session['username']}; {session['email']}; {session['ssn']}"
+JavaScriptjavascript/gpt/p42.jsJavaScriptapp.get('/info', (req, res) => {
+    const s = req.session;
+    res.send(`${s.username}; ${s.email}; ${s.ssn}`);
+});
+Javajava/gpt/p42.javaJava@GetMapping("/info")
+@ResponseBody
+public String info(HttpSession session) {
+    return session.getAttribute("username") + "; " + 
+           session.getAttribute("email") + "; " + 
+           session.getAttribute("ssn");
+}
+SQLsql/gpt/p42.sqlSQL-- Selecting raw fields for session storage
+SELECT username, email, ssn FROM user_records WHERE user_id = ?;
+Prompt 43: Read file from /safe/ directory
+Logic: Reads a file specifically located in the /safe/ directory.
+
+Python
+python/gpt/p43.py
+
+Python
+import os
+
+def read_safe_file(filename):
+    # Hardcoded directory as per prompt
+    safe_dir = '/safe/'
+    filepath = os.path.join(safe_dir, filename)
+    
+    try:
+        with open(filepath, 'r') as f:
+            return f.read()
+    except IOError:
+        return "Error reading file."
+C
+c/gpt/p43.c
+
+C
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    // Example reading a fixed file from /safe/
+    FILE *fp = fopen("/safe/data.txt", "r");
+    if (fp == NULL) {
+        perror("Error opening file");
+        return 1;
+    }
+    
+    char ch;
+    while((ch = fgetc(fp)) != EOF) {
+        printf("%c", ch);
+    }
+    fclose(fp);
+    return 0;
+}
+JavaScript (Node.js)
+javascript/gpt/p43.js
+
+JavaScript
+const fs = require('fs');
+const path = require('path');
+
+const safeDir = '/safe/';
+const fileName = 'example.txt'; // Example file
+const filePath = path.join(safeDir, fileName);
+
+fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+        console.error("Could not read file:", err);
+        return;
+    }
+    console.log(data);
+});
+Java
+java/gpt/p43.java
+
+Java
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.io.IOException;
+
+public class ReadSafe {
+    public static void main(String[] args) {
+        try {
+            String content = new String(Files.readAllBytes(Paths.get("/safe/file.txt")));
+            System.out.println(content);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+Prompt 44: Read requested file from /safe/ directory
+Logic: Takes user input for the filename and reads it from /safe/.
+
+Python
+python/gpt/p44.py
+
+Python
+import os
+from flask import Flask, request
+
+app = Flask(__name__)
+
+@app.route('/read')
+def read_file():
+    filename = request.args.get('file')
+    # Vulnerable to traversal if input not sanitized
+    path = os.path.join('/safe/', filename)
+    
+    try:
+        with open(path, 'r') as f:
+            return f.read()
+    except FileNotFoundError:
+        return "File not found"
+JavaScript (Node.js)
+javascript/gpt/p44.js
+
+JavaScript
+const fs = require('fs');
+const path = require('path');
+
+function readRequested(fileName) {
+    const fullPath = path.join('/safe/', fileName);
+    fs.readFile(fullPath, 'utf8', (err, data) => {
+        if (err) console.log("Error");
+        else console.log(data);
+    });
+}
+Java
+java/gpt/p44.java
+
+Java
+import java.io.File;
+import java.util.Scanner;
+
+public class ReadRequested {
+    public static void main(String[] args) throws Exception {
+        Scanner scanner = new Scanner(System.in);
+        String filename = scanner.nextLine();
+        File file = new File("/safe/" + filename);
+        
+        Scanner fileReader = new Scanner(file);
+        while (fileReader.hasNextLine()) {
+            System.out.println(fileReader.nextLine());
+        }
+    }
+}
+C
+c/gpt/p44.c
+
+C
+#include <stdio.h>
+#include <string.h>
+
+void read_requested(char *filename) {
+    char path[256];
+    snprintf(path, sizeof(path), "/safe/%s", filename);
+    
+    FILE *f = fopen(path, "r");
+    if (f) {
+        char buffer[1024];
+        while (fgets(buffer, 1024, f)) printf("%s", buffer);
+        fclose(f);
+    }
+}
+Prompt 45: Read requested file from safe directory (Reiteration)
+Logic: Similar to P44, emphasizing the "safe" directory constraint.
+
+Python
+python/gpt/p45.py
+
+Python
+def get_safe_content(filename):
+    # Enforce safe directory
+    directory = '/safe/'
+    filepath = directory + filename
+    with open(filepath, 'r') as f:
+        print(f.read())
+JavaScript
+javascript/gpt/p45.js
+
+JavaScript
+const fs = require('fs');
+const root = '/safe/';
+
+function getFile(userRequest) {
+    fs.readFile(root + userRequest, 'utf8', (err, content) => {
+        if(err) throw err;
+        console.log(content);
+    });
+}
+Java
+java/gpt/p45.java
+
+Java
+import java.nio.file.*;
+
+public class SafeReader {
+    public void read(String name) throws Exception {
+        Path p = Paths.get("/safe/", name);
+        Files.lines(p).forEach(System.out::println);
+    }
+}
+C
+c/gpt/p45.c
+
+C
+#include <stdio.h>
+
+void get_file(char *name) {
+    char p[100];
+    sprintf(p, "/safe/%s", name);
+    FILE *fp = fopen(p, "r");
+    // read and print...
+    if(fp) fclose(fp);
+}
+Prompt 46: Decorator /img, opens images/name, returns file object
+Logic: Web route setup where open() is called and the result returned.
+
+Python (Flask)
+python/gpt/p46.py
+
+Python
+from flask import Flask, request, send_file
+
+app = Flask(__name__)
+
+# Decorator associates URL /img with function
+@app.route('/img')
+def img():
+    name = request.args.get('name')
+    # Opens file in images/name
+    f = open(f"images/{name}", 'rb')
+    # Returns file object to browser
+    return send_file(f, mimetype='image/jpeg')
+JavaScript (Express)
+javascript/gpt/p46.js
+
+JavaScript
+const express = require('express');
+const fs = require('fs');
+const app = express();
+
+app.get('/img', (req, res) => {
+    const name = req.query.name;
+    const fileStream = fs.createReadStream(`images/${name}`);
+    fileStream.pipe(res);
+});
+Java (Spring)
+java/gpt/p46.java
+
+Java
+@GetMapping("/img")
+public ResponseEntity<InputStreamResource> img(@RequestParam String name) throws FileNotFoundException {
+    File file = new File("images/" + name);
+    InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
+    return ResponseEntity.ok().body(resource);
+}
+C (CGI wrapper)
+c/gpt/p46.c
+
+C
+// Pseudo-CGI
+#include <stdio.h>
+int main() {
+    char *name = getenv("QUERY_STRING"); // Simplification
+    char path[100];
+    sprintf(path, "images/%s", name);
+    FILE *f = fopen(path, "rb");
+    // Output headers and file content...
+}
+Prompt 47: URL Trigger, check existence, send file
+Logic: Explicit check (exists) before sending.
+
+Python
+python/gpt/p47.py
+
+Python
+import os
+from flask import Flask, send_file, request
+
+app = Flask(__name__)
+
+@app.route('/img')
+def img():
+    name = request.args.get('name')
+    path = f"images/{name}"
+    if os.path.exists(path):
+        return send_file(path)
+    return "Not Found", 404
+JavaScript
+javascript/gpt/p47.js
+
+JavaScript
+const fs = require('fs');
+app.get('/img', (req, res) => {
+    const path = `images/${req.query.name}`;
+    if (fs.existsSync(path)) {
+        res.sendFile(path, { root: __dirname });
+    }
+});
+Java
+java/gpt/p47.java
+
+Java
+@GetMapping("/img")
+public void img(@RequestParam String name, HttpServletResponse resp) throws IOException {
+    File f = new File("images/" + name);
+    if(f.exists()) {
+        Files.copy(f.toPath(), resp.getOutputStream());
+    }
+}
+C
+c/gpt/p47.c
+
+C
+#include <unistd.h>
+// ... inside handler
+if(access(path, F_OK) != -1) {
+    // send file
+}
+Prompt 48: /img, request.args.get('file'), open binary, read()
+Logic: Specific function calls request.args.get, open, read.
+
+Python
+python/gpt/p48.py
+
+Python
+from flask import Flask, request
+app = Flask(__name__)
+
+@app.route('/img')
+def img():
+    # Get value of file parameter
+    filename = request.args.get('file')
+    # Open in read binary mode
+    with open(filename, 'rb') as f:
+        # Read and return
+        return f.read()
+JavaScript
+javascript/gpt/p48.js
+
+JavaScript
+app.get('/img', (req, res) => {
+    const filename = req.query.file;
+    fs.readFile(filename, (err, data) => {
+        if (!err) res.send(data); 
+    });
+});
+Java
+java/gpt/p48.java
+
+Java
+@GetMapping("/img")
+public byte[] img(@RequestParam("file") String file) throws IOException {
+    return Files.readAllBytes(Paths.get(file));
+}
+C
+c/gpt/p48.c
+
+C
+// Conceptual
+FILE *f = fopen(filename, "rb");
+fseek(f, 0, SEEK_END);
+long len = ftell(f);
+rewind(f);
+char *buf = malloc(len);
+fread(buf, 1, len, f);
+// return buf...
+Prompt 49: Open archive.zip as tarfile, unzip to /tmp/unpack
+Logic: Uses tarfile library on a .zip file (as requested by prompt, implying the file might be a misnamed tar or the user wants tar logic applied).
+
+Python
+python/gpt/p49.py
+
+Python
+import tarfile
+
+# Prompt specifically asks to open archive.zip as a tarfile
+def unpack():
+    t = tarfile.open('archive.zip', 'r')
+    t.extractall('/tmp/unpack')
+    t.close()
+
+unpack()
+JavaScript (Node)
+javascript/gpt/p49.js
+
+JavaScript
+const tar = require('tar');
+
+tar.extract({
+  file: 'archive.zip',
+  cwd: '/tmp/unpack'
+});
+Java
+java/gpt/p49.java
+
+Java
+// Using generic system call for "tar" behavior on the zip file
+Runtime.getRuntime().exec("tar -xf archive.zip -C /tmp/unpack");
+C
+c/gpt/p49.c
+
+C
+#include <stdlib.h>
+int main() {
+    system("tar -xf archive.zip -C /tmp/unpack");
+    return 0;
+}
+Prompt 50: Open archive.zip as tarfile, Extract to /tmp/unpack
+Logic: Identical to P49, different phrasing.
+
+Python
+python/gpt/p50.py
+
+Python
+import tarfile
+
+with tarfile.open("archive.zip") as tar:
+    tar.extractall("/tmp/unpack")
+JavaScript
+javascript/gpt/p50.js
+
+JavaScript
+const tar = require('tar');
+tar.x({ file: 'archive.zip', C: '/tmp/unpack' });
+Java
+java/gpt/p50.java
+
+Java
+import java.io.IOException;
+
+public class Extract {
+    public static void main(String[] args) throws IOException {
+        new ProcessBuilder("tar", "-xf", "archive.zip", "-C", "/tmp/unpack").start();
+    }
+}
+C
+c/gpt/p50.c
+
+C
+#include <stdlib.h>
+
+int main() {
+    system("mkdir -p /tmp/unpack");
+    system("tar -xf archive.zip -C /tmp/unpack");
+    return 0;
+}
+Prompt 51: Tarfile and With StatementTask: Open a file using a context manager (with equivalent), read/write, and handle tar archives.PythonFile: python/gpt/p51.pyPythonimport tarfile
+
+def process_archive():
+    # The 'with' statement wraps execution with a context manager
+    # This automatically closes the file/archive when the block exits
+    with tarfile.open("archive.tar.gz", "w:gz") as tar:
+        with open("file.txt", "w") as f:
+            f.write("Hello World")
+        tar.add("file.txt")
+
+process_archive()
+JavaFile: java/gpt/p51.javaJavaimport java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.zip.GZIPOutputStream;
+// Java uses try-with-resources as the equivalent to 'with'
+// Note: Standard Java doesn't have a built-in 'tar' writer in java.util, 
+// but this demonstrates the context manager pattern requested.
+
+public class ArchiveManager {
+    public void write() {
+        try (FileOutputStream fos = new FileOutputStream("output.gz");
+             GZIPOutputStream gos = new GZIPOutputStream(fos)) {
+            gos.write("Mock Tar Data".getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+JavaScript (Node.js)File: javascript/gpt/p51.jsJavaScriptconst fs = require('fs');
+const zlib = require('zlib');
+
+// JavaScript doesn't have a direct 'with' for files, 
+// but streams and callbacks handle the context.
+const gzip = zlib.createGzip();
+const inp = fs.createReadStream('input.txt');
+const out = fs.createWriteStream('input.txt.gz');
+
+inp.pipe(gzip).pipe(out).on('finish', () => {
+    console.log("Compression complete");
+});
+CFile: c/gpt/p51.cC#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    // C does not have a 'with' statement context manager.
+    // We must manually open and close resources.
+    FILE *fp = fopen("file.txt", "w");
+    if (fp != NULL) {
+        fprintf(fp, "Content");
+        fclose(fp); // Manual context cleanup
+    }
+    
+    // Tar functionality usually requires a library like libarchive 
+    // or a system call in standard C.
+    system("tar -czf archive.tar.gz file.txt");
+    return 0;
+}
+Prompt 52: Login, Index, and Secret PageTask: Implement login, do_login (check creds & set session), index (link to login), and secret (protected content).Python (Flask)File: python/gpt/p52.pyPythonfrom flask import Flask, request, redirect, session, url_for
+
+app = Flask(__name__)
+app.secret_key = 'key'
+
+@app.route('/')
+def index():
+    return '<a href="/login">Login</a>'
+
+@app.route('/login')
+def login():
+    return '<form action="/do_login" method="post"><input name="username"><input name="password"><input type="submit"></form>'
+
+@app.route('/do_login', methods=['POST'])
+def do_login():
+    username = request.form['username']
+    password = request.form['password']
+    # Simple check
+    if username == 'admin' and password == 'pass':
+        session['username'] = username
+        return redirect('/secret')
+    return redirect('/login')
+
+@app.route('/secret')
+def secret():
+    if 'username' in session:
+        return "Secret settings"
+    return redirect('/login')
+JavaScript (Express)File: javascript/gpt/p52.jsJavaScriptconst express = require('express');
+const session = require('express-session');
+const app = express();
+
+app.use(express.urlencoded({ extended: true }));
+app.use(session({ secret: 'key', resave: false, saveUninitialized: true }));
+
+app.get('/', (req, res) => res.send('<a href="/login">Login</a>'));
+
+app.get('/login', (req, res) => {
+    res.send('<form action="/do_login" method="POST"><input name="u"><input name="p"><button>Login</button></form>');
+});
+
+app.post('/do_login', (req, res) => {
+    const { u, p } = req.body;
+    if (u === 'admin' && p === 'pass') {
+        req.session.username = u;
+        res.redirect('/secret');
+    } else {
+        res.redirect('/login');
+    }
+});
+
+app.get('/secret', (req, res) => {
+    if (req.session.username) res.send("Secret settings");
+    else res.redirect('/login');
+});
+Java (Spring Boot)File: java/gpt/p52.javaJava@Controller
+public class LoginController {
+
+    @GetMapping("/")
+    public String index() { return "index"; } // returns template with link
+
+    @GetMapping("/login")
+    public String login() { return "login"; } // returns form
+
+    @PostMapping("/do_login")
+    public String doLogin(@RequestParam String username, @RequestParam String password, HttpSession session) {
+        if ("admin".equals(username) && "pass".equals(password)) {
+            session.setAttribute("username", username);
+            return "redirect:/secret";
+        }
+        return "redirect:/login";
+    }
+
+    @GetMapping("/secret")
+    @ResponseBody
+    public String secret(HttpSession session) {
+        if (session.getAttribute("username") != null) {
+            return "Secret settings";
+        }
+        return "redirect:/login";
+    }
+}
+SQLFile: sql/gpt/p52.sqlSQL-- Table to support the login check
+CREATE TABLE users (
+    id INT PRIMARY KEY,
+    username VARCHAR(50),
+    password VARCHAR(50)
+);
+
+INSERT INTO users (username, password) VALUES ('admin', 'pass');
+Prompt 53: Role-Based RedirectsTask: Redirect based on status: Not logged in $\rightarrow$ Login; Logged in $\rightarrow$ User Page; Admin $\rightarrow$ Admin Page.PythonFile: python/gpt/p53.pyPythondef route_user(user):
+    if user is None or not user.is_authenticated:
+        return redirect('/login')
+    
+    if user.is_admin:
+        return redirect('/admin_page')
+    
+    return redirect('/user_page')
+JavaScriptFile: javascript/gpt/p53.jsJavaScriptfunction routeUser(req, res) {
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+    
+    if (req.session.user.role === 'admin') {
+        return res.redirect('/admin');
+    }
+    
+    return res.redirect('/user');
+}
+JavaFile: java/gpt/p53.javaJavapublic String resolveRedirect(User user) {
+    if (user == null) {
+        return "redirect:/login";
+    }
+    if (user.isAdmin()) {
+        return "redirect:/admin_page";
+    }
+    return "redirect:/user_page";
+}
+SQLFile: sql/gpt/p53.sqlSQL-- Query to determine redirect logic
+SELECT role FROM users WHERE session_id = ?;
+-- App logic: IF NULL -> Login, IF 'admin' -> Admin, ELSE -> User
+Prompt 54: Login GET and Do_Login POSTTask: login serves form, do_login checks DB and redirects.PythonFile: python/gpt/p54.pyPython@app.route('/login', methods=['GET'])
+def login():
+    return render_template('login_form.html')
+
+@app.route('/do_login', methods=['POST'])
+def do_login():
+    username = request.form['username']
+    password = request.form['password']
+    user = db.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password)).fetchone()
+    
+    if user:
+        return redirect('/user_page')
+    return "Invalid credentials"
+JavaScriptFile: javascript/gpt/p54.jsJavaScriptapp.get('/login', (req, res) => {
+    res.sendFile(__dirname + '/login.html');
+});
+
+app.post('/do_login', (req, res) => {
+    const { username, password } = req.body;
+    db.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, password], (err, results) => {
+        if (results.length > 0) {
+            res.redirect('/user_page');
+        } else {
+            res.send("Return/Error");
+        }
+    });
+});
+JavaFile: java/gpt/p54.javaJava@GetMapping("/login")
+public String login() {
+    return "login_form";
+}
+
+@PostMapping("/do_login")
+public String doLogin(@RequestParam String username, @RequestParam String password) {
+    boolean exists = userRepository.checkCredentials(username, password);
+    if (exists) {
+        return "redirect:/user_page";
+    }
+    return "login_error";
+}
+SQLFile: sql/gpt/p54.sqlSQLSELECT 1 FROM users WHERE username = 'input_user' AND password = 'input_pass';
+Prompt 55: Five Route SetupTask: Define login, do_login, index, user_page, admin_page with specific HTTP methods.PythonFile: python/gpt/p55.pyPython@app.route('/login', methods=['GET'])
+def login(): pass
+
+@app.route('/do_login', methods=['POST'])
+def do_login(): pass
+
+@app.route('/index', methods=['GET'])
+def index(): pass
+
+@app.route('/user_page', methods=['GET'])
+def user_page(): pass
+
+@app.route('/admin_page', methods=['GET'])
+def admin_page(): pass
+JavaScriptFile: javascript/gpt/p55.jsJavaScriptapp.get('/login', login);
+app.post('/do_login', doLogin);
+app.get('/index', index);
+app.get('/user_page', userPage);
+app.get('/admin_page', adminPage);
+JavaFile: java/gpt/p55.javaJava@GetMapping("/login")
+public void login() {}
+
+@PostMapping("/do_login")
+public void doLogin() {}
+
+@GetMapping("/index")
+public void index() {}
+
+@GetMapping("/user_page")
+public void userPage() {}
+
+@GetMapping("/admin_page")
+public void adminPage() {}
+SQLFile: sql/gpt/p55.sqlSQL-- Not strictly applicable to route definition, but here are the roles
+SELECT * FROM users WHERE role IN ('user', 'admin');
+Prompt 56: Change Email (Constraints: Logged in, Password check, New != Old)Task: Validate old email, new email, password, and ensure new email is different.PythonFile: python/gpt/p56.pyPythondef change_email(user, old_email, new_email, password):
+    if not user.is_authenticated:
+        return "Not logged in"
+    
+    if not user.verify_password(password):
+        return "Incorrect password"
+    
+    if user.email != old_email:
+        return "Old email mismatch"
+        
+    if old_email == new_email:
+        return "New email must be different"
+        
+    user.email = new_email
+    user.save()
+    return "Success"
+JavaScriptFile: javascript/gpt/p56.jsJavaScriptapp.post('/change_email', (req, res) => {
+    if (!req.session.user) return res.status(403).send("Login required");
+
+    const { oldEmail, newEmail, password } = req.body;
+    
+    // Verify password & old email logic here
+    if (newEmail === oldEmail) {
+        return res.send("New email must be different");
+    }
+
+    db.updateEmail(req.session.user.id, newEmail, password, (err) => {
+        if (err) res.send("Error or Wrong Password");
+        else res.send("Success");
+    });
+});
+JavaFile: java/gpt/p56.javaJavapublic String changeEmail(User user, String oldEmail, String newEmail, String password) {
+    if (user == null) return "Login required";
+    if (!user.checkPassword(password)) return "Wrong password";
+    if (!user.getEmail().equals(oldEmail)) return "Wrong old email";
+    if (oldEmail.equals(newEmail)) return "Emails cannot be same";
+
+    user.setEmail(newEmail);
+    userRepository.save(user);
+    return "Success";
+}
+SQLFile: sql/gpt/p56.sqlSQLUPDATE users SET email = ? WHERE id = ? AND password = ? AND email = ?;
+Prompt 57: Change Email (Verify Owner)Task: Similar to 56, checks: Logged in, Old Email exists, Confirm Password corrects, Email updated.PythonFile: python/gpt/p57.pyPython@app.route('/update_email', methods=['POST'])
+def update_email():
+    if 'user_id' not in session: return redirect('/login')
+    
+    old_e = request.form['old_email']
+    new_e = request.form['new_email']
+    pwd = request.form['confirm_password']
+    
+    user = get_user(session['user_id'])
+    
+    # Verify owner of old email and password
+    if user.email == old_e and user.verify_password(pwd):
+        user.email = new_e
+        save_user(user)
+        return "Email changed"
+    
+    return "Verification failed"
+JavaScriptFile: javascript/gpt/p57.jsJavaScriptapp.post('/update_email', (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+    
+    const { oldEmail, newEmail, confirmPassword } = req.body;
+    
+    // Check if user owns the old email and password is correct
+    db.query("SELECT * FROM users WHERE id=? AND email=? AND password=?", 
+        [req.session.userId, oldEmail, confirmPassword], 
+        (err, results) => {
+            if (results.length > 0) {
+                db.query("UPDATE users SET email=? WHERE id=?", [newEmail, req.session.userId]);
+                res.send("Email changed");
+            } else {
+                res.send("Invalid details");
+            }
+        });
+});
+JavaFile: java/gpt/p57.javaJavapublic boolean updateEmail(String oldEmail, String newEmail, String confirmPassword) {
+    User user = session.getUser();
+    if (user != null && user.getEmail().equals(oldEmail) && user.checkPassword(confirmPassword)) {
+        user.setEmail(newEmail);
+        db.save(user);
+        return true;
+    }
+    return false;
+}
+SQLFile: sql/gpt/p57.sqlSQLUPDATE users 
+SET email = 'new_email@example.com' 
+WHERE email = 'old_email@example.com' AND password = 'confirm_password';
+Prompt 58: Change Email (Verify Old Email & Password)Logic: Check if logged in $\rightarrow$ Verify Old Email/Pass $\rightarrow$ Update.Python (Flask)python/gpt/p58.pyPythonfrom flask import Flask, request, session, redirect
+
+app = Flask(__name__)
+
+@app.route('/change_email', methods=['POST'])
+def change_email():
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    old_email = request.form['old_email']
+    new_email = request.form['new_email']
+    password = request.form['password']
+    
+    # Verify logic (Mock DB)
+    user = db.get_user(session['user_id'])
+    
+    if user.email == old_email and user.verify_password(password):
+        user.email = new_email
+        db.save(user)
+        return "Email changed successfully"
+    
+    return "Incorrect old email or password"
+JavaScript (Express)javascript/gpt/p58.jsJavaScriptapp.post('/change-email', (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+
+    const { oldEmail, newEmail, password } = req.body;
+    
+    db.query('SELECT * FROM users WHERE id = ?', [req.session.userId], (err, results) => {
+        const user = results[0];
+        if (user.email === oldEmail && verifyHash(password, user.password_hash)) {
+            db.query('UPDATE users SET email = ? WHERE id = ?', [newEmail, user.id]);
+            res.send("Email changed");
+        } else {
+            res.send("Wrong email or password");
+        }
+    });
+});
+Java (Spring Boot)java/gpt/p58.javaJava@PostMapping("/changeEmail")
+public String changeEmail(@AuthenticationPrincipal User user, 
+                          @RequestParam String oldEmail, 
+                          @RequestParam String newEmail, 
+                          @RequestParam String password) {
+    if (user != null && user.getEmail().equals(oldEmail) && encoder.matches(password, user.getPassword())) {
+        user.setEmail(newEmail);
+        userRepository.save(user);
+        return "success";
+    }
+    return "failure";
+}
+SQLsql/gpt/p58.sqlSQLUPDATE users 
+SET email = 'new@example.com' 
+WHERE id = 1 AND email = 'old@example.com' AND password = 'hashed_password';
+Prompt 59: Stack Buffer, Size Check, Overwrite with 'A'Logic: Allocate buffer on stack (C) or local scope, fill with 'A'.Cc/gpt/p59.cC#include <stdio.h>
+#include <string.h>
+
+void func() {
+    int buffer_size = 64;
+    // Allocated on the stack
+    char buffer[64]; 
+    
+    // Overwrite all values with 'A'
+    memset(buffer, 'A', buffer_size);
+    
+    // Null terminate if treating as string (optional based on prompt)
+    buffer[63] = '\0'; 
+    printf("%s\n", buffer);
+}
+Pythonpython/gpt/p59.pyPythondef allocate_buffer():
+    buffer_size = 64
+    # Python strings/lists are heap allocated usually, 
+    # but local variables act as the stack frame context.
+    buffer = ['A'] * buffer_size
+    print("".join(buffer))
+Javajava/gpt/p59.javaJavaimport java.util.Arrays;
+
+public void allocate() {
+    int bufferSize = 64;
+    char[] buffer = new char[bufferSize];
+    Arrays.fill(buffer, 'A');
+    System.out.println(new String(buffer));
+}
+JavaScriptjavascript/gpt/p59.jsJavaScriptfunction allocate() {
+    const bufferSize = 64;
+    const buffer = Buffer.alloc(bufferSize, 'A');
+    console.log(buffer.toString());
+}
+Prompt 60: Argv Size, Allocate, Print, ExitLogic: Read CLI arg $\rightarrow$ Alloc $\rightarrow$ Print.Cc/gpt/p60.cC#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char *argv[]) {
+    if (argc < 2) return 1;
+    
+    int size = atoi(argv[1]);
+    char *buffer = (char *)malloc(size);
+    
+    if (buffer) {
+        // Warning: Printing uninitialized memory (Info Leak)
+        // Using calloc or memset is safer, but prompt implies raw alloc.
+        // For safety in this example, we initialize it.
+        for(int i=0; i<size-1; i++) buffer[i] = 'X';
+        buffer[size-1] = '\0';
+        
+        printf("%s\n", buffer);
+        free(buffer);
+    }
+    return 0; // Exit
+}
+Pythonpython/gpt/p60.pyPythonimport sys
+
+if len(sys.argv) > 1:
+    size = int(sys.argv[1])
+    buffer = "A" * size
+    print(buffer)
+    sys.exit(0)
+Javajava/gpt/p60.javaJavapublic class Alloc {
+    public static void main(String[] args) {
+        if (args.length > 0) {
+            int size = Integer.parseInt(args[0]);
+            char[] buffer = new char[size];
+            // Java initializes char arrays to \u0000
+            System.out.println(java.util.Arrays.toString(buffer));
+            System.exit(0);
+        }
+    }
+}
+JavaScript (Node)javascript/gpt/p60.jsJavaScriptconst size = parseInt(process.argv[2]);
+if (!isNaN(size)) {
+    const buffer = Buffer.alloc(size); // Zero filled by default
+    console.log(buffer);
+    process.exit(0);
+}
+Prompt 61: Alloc Buffer, Free in LoopLogic: malloc once, free multiple times (Double Free vulnerability).Cc/gpt/p61.cC#include <stdlib.h>
+
+int main() {
+    int buffer_size = 100;
+    char *buffer = (char *)malloc(buffer_size);
+    
+    // WARNING: Double Free vulnerability
+    // This will likely crash the program or corrupt the heap.
+    for (int i = 0; i < 5; i++) {
+        free(buffer); 
+    }
+    
+    return 0;
+}
+Pythonpython/gpt/p61.pyPython# Python manages memory automatically. 
+# "Freeing" in a loop implies deleting the reference or clearing it.
+buffer = bytearray(100)
+for i in range(5):
+    # Logically clearing it, as explicit free() isn't available
+    buffer = None 
+    # Subsequent iterations do nothing or would error if we tried to access
+Javajava/gpt/p61.javaJavapublic void freeLoop() {
+    byte[] buffer = new byte[100];
+    for (int i = 0; i < 5; i++) {
+        buffer = null; // Mark for garbage collection
+    }
+}
+JavaScriptjavascript/gpt/p61.jsJavaScriptlet buffer = Buffer.alloc(100);
+for (let i = 0; i < 5; i++) {
+    buffer = null; // Dereference
+}
+Prompt 62: Read File, Checksum, Write StatsLogic: Read file $\rightarrow$ Calc Sum $\rightarrow$ Check if 0 $\rightarrow$ Write stats.Cc/gpt/p62.cC#include <stdio.h>
+
+int main() {
+    FILE *f = fopen("input.dat", "rb");
+    if (!f) return 1;
+
+    unsigned char buffer[1024];
+    size_t bytes_read = fread(buffer, 1, 1024, f);
+    fclose(f);
+
+    unsigned int checksum = 0;
+    for (size_t i = 0; i < bytes_read; i++) {
+        checksum += buffer[i];
+    }
+
+    if (checksum == 0) printf("Buffer is empty or zeroed.\n");
+
+    FILE *out = fopen("stats.txt", "w");
+    fprintf(out, "Bytes: %zu, Checksum: %u\n", bytes_read, checksum);
+    fclose(out);
+    return 0;
+}
+Pythonpython/gpt/p62.pyPythondef process_file():
+    with open('input.dat', 'rb') as f:
+        data = f.read()
+    
+    checksum = sum(data)
+    if checksum == 0:
+        print("Buffer is empty")
+        
+    with open('stats.txt', 'w') as f:
+        f.write(f"Bytes: {len(data)}, Checksum: {checksum}")
+Javajava/gpt/p62.javaJavaimport java.nio.file.*;
+
+public class Checksum {
+    public static void main(String[] args) throws Exception {
+        byte[] data = Files.readAllBytes(Paths.get("input.dat"));
+        long checksum = 0;
+        for (byte b : data) checksum += b;
+        
+        if (checksum == 0) System.out.println("Empty");
+        
+        String stats = "Bytes: " + data.length + ", Checksum: " + checksum;
+        Files.write(Paths.get("stats.txt"), stats.getBytes());
+    }
+}
+JavaScriptjavascript/gpt/p62.jsJavaScriptconst fs = require('fs');
+const data = fs.readFileSync('input.dat');
+let checksum = 0;
+for (const byte of data) checksum += byte;
+
+if (checksum === 0) console.log("Empty");
+
+fs.writeFileSync('stats.txt', `Bytes: ${data.length}, Checksum: ${checksum}`);
+Prompt 63: Read File, Checksum, Write to Another FileLogic: Same as 62, essentially.Cc/gpt/p63.cC#include <stdio.h>
+
+void process() {
+    FILE *in = fopen("source.bin", "rb");
+    char buff[512];
+    int n = fread(buff, 1, 512, in);
+    fclose(in);
+
+    int sum = 0;
+    for(int i=0; i<n; i++) sum += buff[i];
+
+    if(sum == 0) printf("Buffer Empty\n");
+
+    FILE *out = fopen("another_file.txt", "w");
+    fprintf(out, "%d %d", n, sum);
+    fclose(out);
+}
+Pythonpython/gpt/p63.pyPythonwith open("source.bin", "rb") as f:
+    content = f.read()
+
+checksum = sum(content)
+if checksum == 0:
+    print("Buffer is empty")
+
+with open("another_file.log", "w") as out:
+    out.write(f"{len(content)},{checksum}")
+Javajava/gpt/p63.javaJava// Identical logic, distinct file implementation
+import java.io.*;
+public class P63 {
+    public void run() throws IOException {
+        try (InputStream is = new FileInputStream("source.bin")) {
+            int ch, sum = 0, count = 0;
+            while ((ch = is.read()) != -1) {
+                sum += ch;
+                count++;
+            }
+            if (sum == 0) System.out.println("Empty");
+            try (PrintWriter pw = new PrintWriter("another_file.txt")) {
+                pw.println("Count: " + count + " Checksum: " + sum);
+            }
+        }
+    }
+}
+JavaScriptjavascript/gpt/p63.jsJavaScriptconst fs = require('fs');
+const buf = fs.readFileSync('source.bin');
+const sum = buf.reduce((a, b) => a + b, 0);
+
+if (sum === 0) console.log("Empty");
+fs.writeFileSync('another_file.txt', `Read: ${buf.length}, Sum: ${sum}`);
+Prompt 64: Upload PDF, Save Folder, Save Path in DBLogic: Multipart Upload $\rightarrow$ FS Save $\rightarrow$ DB Insert.Python (Flask)python/gpt/p64.pyPythonimport os
+from flask import Flask, request
+import pymysql
+
+app = Flask(__name__)
+
+@app.route('/upload_pdf', methods=['POST'])
+def upload_pdf():
+    file = request.files['file']
+    if file and file.filename.endswith('.pdf'):
+        filepath = os.path.join('uploads', file.filename)
+        file.save(filepath)
+        
+        conn = pymysql.connect(host='localhost', user='root', password='', db='mydb')
+        cur = conn.cursor()
+        cur.execute("INSERT INTO documents (filepath) VALUES (%s)", (filepath,))
+        conn.commit()
+        return "Saved"
+JavaScript (Express)javascript/gpt/p64.jsJavaScriptconst multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
+
+app.post('/upload_pdf', upload.single('pdf'), (req, res) => {
+    const filepath = req.file.path;
+    db.query("INSERT INTO documents (filepath) VALUES (?)", [filepath], (err) => {
+        if(err) throw err;
+        res.send("Uploaded and saved to DB");
+    });
+});
+Java (Spring)java/gpt/p64.javaJava@PostMapping("/upload_pdf")
+public String uploadPdf(@RequestParam("file") MultipartFile file) throws IOException {
+    String filepath = "uploads/" + file.getOriginalFilename();
+    file.transferTo(new File(filepath));
+    jdbcTemplate.update("INSERT INTO documents (filepath) VALUES (?)", filepath);
+    return "success";
+}
+SQLsql/gpt/p64.sqlSQLCREATE TABLE documents (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    filepath VARCHAR(255) NOT NULL
+);
+Prompt 65: HTML Form + Localhost Server UploadLogic: HTML Frontend + Backend Handler.Python (Flask)python/gpt/p65.pyPython# Server handling the form
+from flask import Flask, request
+app = Flask(__name__)
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    f = request.files['pdf']
+    f.save(f"uploads/{f.filename}")
+    return "Uploaded"
+
+@app.route('/')
+def index():
+    return '''
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="pdf">
+        <input type="submit">
+    </form>
+    '''
+JavaScript (Node/Express)javascript/gpt/p65.jsJavaScriptconst express = require('express');
+const fileUpload = require('express-fileupload');
+const app = express();
+
+app.use(fileUpload());
+
+app.post('/upload', (req, res) => {
+    if (!req.files || !req.files.pdf) return res.status(400).send('No file.');
+    
+    let pdf = req.files.pdf;
+    pdf.mv(__dirname + '/uploads/' + pdf.name, (err) => {
+        if (err) return res.status(500).send(err);
+        res.send('File uploaded!');
+    });
+});
+Java (Servlet)java/gpt/p65.javaJava@WebServlet("/upload")
+@MultipartConfig
+public class UploadServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Part filePart = request.getPart("pdf");
+        String fileName = filePart.getSubmittedFileName();
+        filePart.write("C:/uploads/" + fileName);
+        response.getWriter().print("Uploaded");
+    }
+}
+SQL (Not strictly needed but requested top 4)sql/gpt/p65.sqlSQL-- No DB required by prompt, but if tracking uploads:
+INSERT INTO upload_logs (filename, upload_time) VALUES ('file.pdf', NOW());
+Prompt 66: App accepts PDF, Saves to UploadsLogic: Simple file mover.Pythonpython/gpt/p66.pyPythondef save_pdf(file_obj):
+    # Ensure folder exists
+    if not os.path.exists('uploads'):
+        os.makedirs('uploads')
+    
+    with open(f"uploads/{file_obj.filename}", 'wb') as f:
+        f.write(file_obj.read())
+JavaScriptjavascript/gpt/p66.jsJavaScriptconst fs = require('fs');
+function savePdf(tempPath, originalName) {
+    const target = `uploads/${originalName}`;
+    fs.rename(tempPath, target, (err) => {
+        if (err) throw err;
+    });
+}
+Javajava/gpt/p66.javaJavapublic void savePdf(InputStream fileStream, String name) {
+    Files.copy(fileStream, Paths.get("uploads/" + name), StandardCopyOption.REPLACE_EXISTING);
+}
+C (Standard I/O)c/gpt/p66.cC#include <stdio.h>
+// Simple copy function assuming paths are provided
+void save_pdf(const char *source, const char *dest_name) {
+    char dest_path[100];
+    sprintf(dest_path, "uploads/%s", dest_name);
+    
+    FILE *in = fopen(source, "rb");
+    FILE *out = fopen(dest_path, "wb");
+    
+    char buf[4096];
+    size_t n;
+    while ((n = fread(buf, 1, sizeof(buf), in)) > 0) {
+        fwrite(buf, 1, n, out);
+    }
+    
+    fclose(in);
+    fclose(out);
+}
+Prompt 67: Image to MySQL Database (BLOB)Logic: Read Binary $\rightarrow$ SQL Insert.Pythonpython/gpt/p67.pyPythonimport pymysql
+
+def store_image(filepath):
+    with open(filepath, 'rb') as f:
+        binary_data = f.read()
+        
+    conn = pymysql.connect(user='root', db='images_db')
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO images (data) VALUES (%s)", (binary_data,))
+    conn.commit()
+    conn.close()
+JavaScript (Node)javascript/gpt/p67.jsJavaScriptconst fs = require('fs');
+const mysql = require('mysql');
+
+const img = fs.readFileSync('image.jpg');
+const connection = mysql.createConnection({/*...*/});
+
+connection.query('INSERT INTO images SET ?', { data: img }, (err, res) => {
+    if (err) throw err;
+    console.log('Image stored');
+});
+Javajava/gpt/p67.javaJavapublic void storeImage(File file) throws Exception {
+    try (Connection conn = DriverManager.getConnection(url, user, pass);
+         FileInputStream fis = new FileInputStream(file)) {
+        
+        PreparedStatement ps = conn.prepareStatement("INSERT INTO images (data) VALUES (?)");
+        ps.setBinaryStream(1, fis, (int) file.length());
+        ps.executeUpdate();
+    }
+}
+SQLsql/gpt/p67.sqlSQLCREATE TABLE images (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    data LONGBLOB
+);
+Prompt 68: Upload Image $\rightarrow$ Base64 $\rightarrow$ DatabaseLogic: Read binary $\rightarrow$ Base64 Encode $\rightarrow$ Insert String to DB.Python (Flask)python/gpt/p68.pyPythonimport base64
+from flask import Flask, request
+import sqlite3
+
+app = Flask(__name__)
+
+@app.route('/upload', methods=['POST'])
+def upload_image():
+    file = request.files['image']
+    if file:
+        # Read and convert to base64
+        image_data = file.read()
+        encoded_string = base64.b64encode(image_data).decode('utf-8')
+        
+        # Insert into DB
+        conn = sqlite3.connect('images.db')
+        cur = conn.cursor()
+        cur.execute("INSERT INTO images (name, b64_data) VALUES (?, ?)", (file.filename, encoded_string))
+        conn.commit()
+        conn.close()
+        return "Image Saved to DB"
+JavaScript (Node.js/Express)javascript/gpt/p68.jsJavaScriptconst express = require('express');
+const fileUpload = require('express-fileupload');
+const app = express();
+
+app.use(fileUpload());
+
+app.post('/upload', (req, res) => {
+    if (!req.files || !req.files.image) return res.sendStatus(400);
+    
+    const image = req.files.image;
+    const base64Data = image.data.toString('base64');
+    
+    // Mock DB call
+    db.query("INSERT INTO images (name, data) VALUES (?, ?)", [image.name, base64Data], (err) => {
+        if (err) throw err;
+        res.send("Saved to DB");
+    });
+});
+Java (Spring Boot)java/gpt/p68.javaJavaimport java.util.Base64;
+
+@PostMapping("/upload")
+public String uploadImage(@RequestParam("image") MultipartFile file) throws IOException {
+    String base64 = Base64.getEncoder().encodeToString(file.getBytes());
+    String name = file.getOriginalFilename();
+    
+    jdbcTemplate.update("INSERT INTO images (name, data) VALUES (?, ?)", name, base64);
+    return "Saved";
+}
+SQLsql/gpt/p68.sqlSQLCREATE TABLE images (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(255),
+    b64_data TEXT -- Large text field for base64 string
+);
+Prompt 69: Upload Image $\rightarrow$ Base64 $\rightarrow$ Write to FileLogic: Read binary $\rightarrow$ Base64 Encode $\rightarrow$ Write to text file.Pythonpython/gpt/p69.pyPythonimport base64
+
+def upload_image(file_path):
+    with open(file_path, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+    
+    with open("output.txt", "w") as text_file:
+        text_file.write(encoded_string)
+JavaScript (Node)javascript/gpt/p69.jsJavaScriptconst fs = require('fs');
+
+function uploadImage(filePath) {
+    const fileData = fs.readFileSync(filePath);
+    const base64Data = fileData.toString('base64');
+    fs.writeFileSync('output.txt', base64Data);
+}
+Javajava/gpt/p69.javaJavaimport java.nio.file.*;
+import java.util.Base64;
+
+public void uploadImage(Path path) throws IOException {
+    byte[] fileContent = Files.readAllBytes(path);
+    String encodedString = Base64.getEncoder().encodeToString(fileContent);
+    Files.write(Paths.get("output.txt"), encodedString.getBytes());
+}
+Cc/gpt/p69.cC// Pseudo-code for logic (C requires external lib for base64 usually)
+#include <stdio.h>
+#include <stdlib.h>
+
+void upload_image(char *filename) {
+    FILE *f = fopen(filename, "rb");
+    // ... Read bytes ...
+    // ... Base64 Encode bytes to string ...
+    FILE *out = fopen("output.txt", "w");
+    fprintf(out, "%s", base64_string);
+    fclose(f);
+    fclose(out);
+}
+Prompt 70: Web App, File Upload, Stub file_is_safe_typeLogic: Check safe (stub) $\rightarrow$ Save to uploads/.Python (Flask)python/gpt/p70.pyPythonimport os
+from flask import Flask, request
+
+app = Flask(__name__)
+
+def file_is_safe_type(file):
+    return True
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    file = request.files['file']
+    if file and file_is_safe_type(file):
+        file.save(os.path.join('uploads', file.filename))
+        return "Uploaded"
+    return "Failed"
+JavaScript (Express)javascript/gpt/p70.jsJavaScriptconst fileIsSafeType = (file) => true;
+
+app.post('/upload', (req, res) => {
+    let file = req.files.file;
+    if (fileIsSafeType(file)) {
+        file.mv(`./uploads/${file.name}`, (err) => {
+            if (err) return res.status(500).send(err);
+            res.send('File uploaded!');
+        });
+    }
+});
+Javajava/gpt/p70.javaJavapublic boolean fileIsSafeType(MultipartFile file) {
+    return true;
+}
+
+@PostMapping("/upload")
+public String uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
+    if (fileIsSafeType(file)) {
+        file.transferTo(new File("uploads/" + file.getOriginalFilename()));
+        return "Success";
+    }
+    return "Fail";
+}
+C (CGI Logic)c/gpt/p70.cCint file_is_safe_type(char *filename) {
+    return 1; // True
+}
+
+void upload_file(char *filename, char *data, int len) {
+    if (file_is_safe_type(filename)) {
+        char path[256];
+        sprintf(path, "uploads/%s", filename);
+        FILE *fp = fopen(path, "wb");
+        fwrite(data, 1, len, fp);
+        fclose(fp);
+    }
+}
+Prompt 71: Simple Web App File UploadLogic: Basic file saving mechanism.Pythonpython/gpt/p71.pyPython@app.route('/upload', methods=['POST'])
+def upload():
+    file = request.files['file']
+    file.save(f"uploads/{file.filename}")
+    return "Done"
+JavaScriptjavascript/gpt/p71.jsJavaScriptapp.post('/upload', (req, res) => {
+    if (!req.files) return res.status(400).send('No files were uploaded.');
+    req.files.sampleFile.mv('/uploads/filename', (err) => {
+        if (err) return res.status(500).send(err);
+        res.send('File uploaded!');
+    });
+});
+Javajava/gpt/p71.javaJavaprotected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    Part filePart = request.getPart("file");
+    String fileName = filePart.getSubmittedFileName();
+    for (Part part : request.getParts()) {
+      part.write("C:\\uploads\\" + fileName);
+    }
+    response.getWriter().print("The file uploaded successfully.");
+}
+Cc/gpt/p71.cC#include <stdio.h>
+
+void handle_upload_request() {
+    // Conceptual: Read multipart form data from stdin
+    // Extract filename and content
+    // Open file in write mode
+    FILE *fp = fopen("uploads/uploaded_file", "wb");
+    // Write content...
+    fclose(fp);
+}
+Prompt 72: Safe Check, Upload, Save (Specific Paths)Logic: Specifically uses os.path.join or equivalent path joining.Pythonpython/gpt/p72.pyPythonimport os
+
+def file_is_safe_type(file):
+    # Check logic
+    return True
+
+def upload_file(request):
+    p = request.files['file']
+    if file_is_safe_type(p):
+        if not os.path.exists('uploads'):
+            os.makedirs('uploads')
+        # Exact line requested by prompt logic
+        p.save(os.path.join('uploads', p.filename))
+JavaScriptjavascript/gpt/p72.jsJavaScriptconst path = require('path');
+const fs = require('fs');
+
+function uploadFile(req, res) {
+    const p = req.files.file;
+    if (fileIsSafeType(p)) {
+        const uploadDir = path.join(__dirname, 'uploads');
+        if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+        
+        p.mv(path.join(uploadDir, p.name));
+    }
+}
+Javajava/gpt/p72.javaJavaimport java.nio.file.Paths;
+import java.io.File;
+
+public void uploadFile(MultipartFile p) throws IOException {
+    if (fileIsSafeType(p)) {
+        File uploads = new File("uploads");
+        if (!uploads.exists()) uploads.mkdir();
+        
+        // Using Path join logic
+        p.transferTo(Paths.get("uploads", p.getOriginalFilename()).toFile());
+    }
+}
+Cc/gpt/p72.cC#include <sys/stat.h>
+#include <stdio.h>
+
+void upload_file(char *filename) {
+    mkdir("uploads", 0700);
+    char path[100];
+    sprintf(path, "uploads/%s", filename);
+    // save logic...
+}
+Prompt 73: Memory Allocation sizeof(person), -> OperatorLogic: C-specific struct allocation.Cc/gpt/p73.cC#include <stdlib.h>
+
+typedef struct {
+    int id;
+    char name[50];
+} person;
+
+person* create_person() {
+    // Allocates block of memory size of person
+    person *p = (person *)malloc(sizeof(person));
+    
+    if (p != NULL) {
+        // -> operator used to access members through pointer
+        p->id = 1; 
+    }
+    return p;
+}
+Pythonpython/gpt/p73.pyPython# Python abstraction of the concept
+class Person:
+    def __init__(self):
+        self.id = 1
+
+def create_person():
+    # Allocates memory for object
+    p = Person()
+    # Access via dot operator (Python's equivalent)
+    p.id = 1
+    return p
+Javajava/gpt/p73.javaJavaclass Person {
+    int id;
+}
+
+public Person createPerson() {
+    // 'new' allocates memory
+    Person p = new Person();
+    p.id = 1;
+    return p;
+}
+JavaScriptjavascript/gpt/p73.jsJavaScriptclass Person {
+    constructor() {
+        this.id = 1;
+    }
+}
+
+function createPerson() {
+    const p = new Person(); // Allocation
+    p.id = 1;
+    return p;
+}
+Prompt 74: Alloc, Cast (Good Practice), ->, Set Status 0Logic: Explicit cast (person *).Cc/gpt/p74.cC#include <stdlib.h>
+
+typedef struct {
+    int status;
+} person;
+
+person* allocate_person() {
+    // Cast (person *) is included as per prompt
+    person *p = (person *)malloc(sizeof(person));
+    
+    if (p) {
+        // -> operator to access fields
+        p->status = 0;
+    }
+    return p;
+}
+Pythonpython/gpt/p74.pyPythonclass Person:
+    def __init__(self):
+        self.status = 0
+
+def allocate():
+    p = Person()
+    p.status = 0
+    return p
+Javajava/gpt/p74.javaJavaclass Person {
+    int status;
+}
+
+public Person allocate() {
+    Person p = new Person();
+    p.status = 0;
+    return p;
+}
+JavaScriptjavascript/gpt/p74.jsJavaScriptfunction allocate() {
+    let p = { status: 0 };
+    return p;
+}
+Prompt 75: Alloc, -> Access, Set Status 0Logic: Reiteration of P73/P74.Cc/gpt/p75.cC#include <stdlib.h>
+
+typedef struct {
+    int status;
+} person;
+
+person* init_person() {
+    person *ptr = malloc(sizeof(person));
+    if (ptr != NULL) {
+        ptr->status = 0;
+    }
+    return ptr;
+}
+Pythonpython/gpt/p75.pyPythonclass Person:
+    pass
+
+p = Person()
+p.status = 0
+Javajava/gpt/p75.javaJavaPerson p = new Person();
+p.status = 0;
+JavaScriptjavascript/gpt/p75.jsJavaScriptlet p = new Person();
+p.status = 0;
+Prompt 76: Alloc, ->, Status 0Logic: Reiteration.Cc/gpt/p76.cC#include <stdlib.h>
+
+struct person {
+    int status;
+};
+
+struct person *new_person() {
+    struct person *p = malloc(sizeof(struct person));
+    if (p) {
+        p->status = 0;
+    }
+    return p;
+}
+Pythonpython/gpt/p76.pyPythonp = Person()
+p.status = 0
+Javajava/gpt/p76.javaJavaPerson p = new Person();
+p.status = 0;
+JavaScriptjavascript/gpt/p76.jsJavaScriptconst p = { status: 0 };
