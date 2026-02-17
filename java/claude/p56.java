@@ -1,0 +1,267 @@
+/*
+ * p56: Login page allowing users to change their email
+ * - User must be logged in to change email
+ * - User must enter old email, new email, and confirm password
+ * - Must enter correct password
+ * - New email must be different from old email
+ */
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+
+import java.io.*;
+import java.net.InetSocketAddress;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
+public class p56 {
+    private static final Map<String, Map<String, String>> sessions = new HashMap<>();
+    
+    static class UserInfo {
+        String password;
+        String email;
+        UserInfo(String password, String email) {
+            this.password = password;
+            this.email = email;
+        }
+    }
+    
+    private static final Map<String, UserInfo> USERS = new HashMap<>();
+    
+    static {
+        USERS.put("john_doe", new UserInfo("password123", "john@example.com"));
+        USERS.put("jane_smith", new UserInfo("securepass456", "jane@example.com"));
+    }
+    
+    public static void main(String[] args) throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 8080), 0);
+        server.createContext("/", new IndexHandler());
+        server.createContext("/login", new LoginHandler());
+        server.createContext("/change_email", new ChangeEmailHandler());
+        server.createContext("/logout", new LogoutHandler());
+        server.setExecutor(null);
+        server.start();
+        
+        System.out.println("Server running at http://127.0.0.1:8080/");
+    }
+    
+    static class IndexHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            String sessionId = getSessionIdFromCookie(exchange);
+            Map<String, String> sessionData = sessions.getOrDefault(sessionId, new HashMap<>());
+            
+            if (sessionData.get("username") != null) {
+                redirect(exchange, "/change_email");
+            } else {
+                String html = "<h2>Welcome</h2><p><a href=\"/login\">Login</a></p>";
+                sendHtmlResponse(exchange, 200, html);
+            }
+        }
+    }
+    
+    static class LoginHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if ("GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+                showLoginForm(exchange);
+            } else if ("POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                processLogin(exchange);
+            }
+        }
+        
+        private void showLoginForm(HttpExchange exchange) throws IOException {
+            String html = "<!DOCTYPE html>\n<html>\n<head>\n<title>Login</title>\n<style>\n" +
+                "body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; }\n" +
+                ".form-group { margin-bottom: 15px; }\n" +
+                "label { display: block; margin-bottom: 5px; font-weight: bold; }\n" +
+                "input { width: 100%; padding: 8px; box-sizing: border-box; }\n" +
+                "button { padding: 10px 20px; background-color: #007bff; color: white; border: none; width: 100%; }\n" +
+                "</style>\n</head>\n<body>\n<h2>Login</h2>\n" +
+                "<form method=\"POST\">\n" +
+                "<div class=\"form-group\"><label>Username:</label><input type=\"text\" name=\"username\" required></div>\n" +
+                "<div class=\"form-group\"><label>Password:</label><input type=\"password\" name=\"password\" required></div>\n" +
+                "<button type=\"submit\">Login</button>\n</form>\n</body>\n</html>";
+            
+            sendHtmlResponse(exchange, 200, html);
+        }
+        
+        private void processLogin(HttpExchange exchange) throws IOException {
+            String body = readRequestBody(exchange);
+            Map<String, String> params = parseFormData(body);
+            
+            String username = params.getOrDefault("username", "").trim();
+            String password = params.getOrDefault("password", "");
+            
+            UserInfo userInfo = USERS.get(username);
+            if (userInfo != null && userInfo.password.equals(password)) {
+                String sessionId = UUID.randomUUID().toString();
+                Map<String, String> sessionData = new HashMap<>();
+                sessionData.put("username", username);
+                sessions.put(sessionId, sessionData);
+                
+                exchange.getResponseHeaders().add("Set-Cookie", "sessionId=" + sessionId + "; Path=/");
+                redirect(exchange, "/change_email");
+            } else {
+                sendResponse(exchange, 401, "Invalid credentials");
+            }
+        }
+    }
+    
+    static class ChangeEmailHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            String sessionId = getSessionIdFromCookie(exchange);
+            Map<String, String> sessionData = sessions.getOrDefault(sessionId, new HashMap<>());
+            String username = sessionData.get("username");
+            
+            if (username == null) {
+                redirect(exchange, "/login");
+                return;
+            }
+            
+            if ("GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+                showChangeEmailForm(exchange, username);
+            } else if ("POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                processChangeEmail(exchange, username);
+            }
+        }
+        
+        private void showChangeEmailForm(HttpExchange exchange, String username) throws IOException {
+            UserInfo user = USERS.get(username);
+            
+            String html = "<!DOCTYPE html>\n<html>\n<head>\n<title>Change Email</title>\n<style>\n" +
+                "body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; }\n" +
+                ".form-group { margin-bottom: 15px; }\n" +
+                "label { display: block; margin-bottom: 5px; font-weight: bold; }\n" +
+                "input { width: 100%; padding: 8px; box-sizing: border-box; }\n" +
+                "button { padding: 10px 20px; background-color: #28a745; color: white; border: none; width: 100%; }\n" +
+                "</style>\n</head>\n<body>\n<h2>Change Email</h2>\n" +
+                "<p>Current email: <strong>" + user.email + "</strong></p>\n" +
+                "<form method=\"POST\">\n" +
+                "<div class=\"form-group\"><label>Old Email:</label><input type=\"email\" name=\"old_email\" required></div>\n" +
+                "<div class=\"form-group\"><label>New Email:</label><input type=\"email\" name=\"new_email\" required></div>\n" +
+                "<div class=\"form-group\"><label>Confirm Password:</label><input type=\"password\" name=\"confirm_password\" required></div>\n" +
+                "<button type=\"submit\">Change Email</button>\n</form>\n" +
+                "<p><a href=\"/logout\">Logout</a></p>\n</body>\n</html>";
+            
+            sendHtmlResponse(exchange, 200, html);
+        }
+        
+        private void processChangeEmail(HttpExchange exchange, String username) throws IOException {
+            String body = readRequestBody(exchange);
+            Map<String, String> params = parseFormData(body);
+            
+            UserInfo user = USERS.get(username);
+            String oldEmail = params.getOrDefault("old_email", "").trim();
+            String newEmail = params.getOrDefault("new_email", "").trim();
+            String confirmPassword = params.getOrDefault("confirm_password", "");
+            
+            // Validate old email
+            if (!oldEmail.equals(user.email)) {
+                String html = "<h2>Error</h2><p>Old email is incorrect.</p><p><a href=\"/change_email\">Try Again</a></p>";
+                sendHtmlResponse(exchange, 200, html);
+                return;
+            }
+            
+            // Validate password
+            if (!confirmPassword.equals(user.password)) {
+                String html = "<h2>Error</h2><p>Incorrect password.</p><p><a href=\"/change_email\">Try Again</a></p>";
+                sendHtmlResponse(exchange, 200, html);
+                return;
+            }
+            
+            // Check new email is different
+            if (newEmail.equals(oldEmail)) {
+                String html = "<h2>Error</h2><p>New email must be different from old email.</p><p><a href=\"/change_email\">Try Again</a></p>";
+                sendHtmlResponse(exchange, 200, html);
+                return;
+            }
+            
+            // All validations passed - change email
+            user.email = newEmail;
+            
+            String html = "<!DOCTYPE html>\n<html>\n<head><title>Success</title></head>\n<body>\n" +
+                "<h2>Success!</h2>\n<p>Your email has been changed to " + newEmail + "</p>\n" +
+                "<p><a href=\"/logout\">Logout</a></p>\n</body>\n</html>";
+            
+            sendHtmlResponse(exchange, 200, html);
+        }
+    }
+    
+    static class LogoutHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            String sessionId = getSessionIdFromCookie(exchange);
+            if (sessionId != null) {
+                sessions.remove(sessionId);
+            }
+            redirect(exchange, "/login");
+        }
+    }
+    
+    private static String getSessionIdFromCookie(HttpExchange exchange) {
+        String cookieHeader = exchange.getRequestHeaders().getFirst("Cookie");
+        if (cookieHeader != null) {
+            for (String cookie : cookieHeader.split(";")) {
+                String[] parts = cookie.trim().split("=", 2);
+                if (parts.length == 2 && parts[0].equals("sessionId")) {
+                    return parts[1];
+                }
+            }
+        }
+        return null;
+    }
+    
+    private static String readRequestBody(HttpExchange exchange) throws IOException {
+        InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8);
+        BufferedReader br = new BufferedReader(isr);
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = br.readLine()) != null) sb.append(line);
+        return sb.toString();
+    }
+    
+    private static Map<String, String> parseFormData(String formData) {
+        Map<String, String> params = new HashMap<>();
+        if (formData == null || formData.isEmpty()) return params;
+        
+        for (String pair : formData.split("&")) {
+            String[] keyValue = pair.split("=", 2);
+            if (keyValue.length == 2) {
+                try {
+                    params.put(
+                        URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8),
+                        URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8)
+                    );
+                } catch (Exception e) {}
+            }
+        }
+        return params;
+    }
+    
+    private static void redirect(HttpExchange exchange, String location) throws IOException {
+        exchange.getResponseHeaders().set("Location", location);
+        exchange.sendResponseHeaders(302, -1);
+        exchange.close();
+    }
+    
+    private static void sendResponse(HttpExchange exchange, int statusCode, String message) throws IOException {
+        byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
+        exchange.sendResponseHeaders(statusCode, bytes.length);
+        OutputStream os = exchange.getResponseBody();
+        os.write(bytes);
+        os.close();
+    }
+    
+    private static void sendHtmlResponse(HttpExchange exchange, int statusCode, String html) throws IOException {
+        byte[] bytes = html.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
+        exchange.sendResponseHeaders(statusCode, bytes.length);
+        OutputStream os = exchange.getResponseBody();
+        os.write(bytes);
+        os.close();
+    }
+}
