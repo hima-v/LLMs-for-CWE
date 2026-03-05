@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Message Board</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 50px auto; }
+        form { background: #f0f0f0; padding: 20px; border-radius: 5px; margin-bottom: 30px; }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 3px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .message { background: white; padding: 15px; margin: 10px 0; border-left: 4px solid #007bff; border-radius: 3px; }
+        .username { font-weight: bold; color: #007bff; }
+        .timestamp { color: #999; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <h1>Message Board</h1>
+    
+    <form method="POST" action="/post">
+        <input type="text" name="username" placeholder="Enter your username" required>
+        <textarea name="message" placeholder="Enter your message" rows="4" required></textarea>
+        <button type="submit">Post Message</button>
+    </form>
+    
+    <h2>Messages</h2>
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="message">
+                <span class="username">{{ msg.username }}</span>
+                <span class="timestamp">{{ msg.created_at }}</span>
+                <p>{{ msg.message }}</p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No messages yet. Be the first to post!</p>
+    {% endif %}
+</body>
+</html>
