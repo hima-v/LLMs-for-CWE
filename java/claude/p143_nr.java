@@ -13,7 +13,7 @@ import java.util.*;
 @SpringBootApplication
 public class p143_nr {
     public static void main(String[] args) {
-        SpringApplication.run(p143_nr.class, args);
+        SpringApplication.run(p143_nr_ver1.class, args);
     }
 }
 
