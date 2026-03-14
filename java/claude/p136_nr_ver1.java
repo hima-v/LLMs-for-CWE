@@ -8,7 +8,7 @@ import java.util.*;
 import java.security.MessageDigest;
 
 @RestController
-public class p136_nr {
+public class p136_nr_ver1 {
     private static final Map<String, String> USERS = 
         Map.of("admin", "hashed_password_here");
     private static final int RATE_LIMIT = 5;

@@ -3,7 +3,7 @@ import java.util.regex.Pattern;
 import java.io.*;
 import java.util.concurrent.*;
 
-public class p144_nr {
+public class p144_nr_ver1 {
     private static final Pattern EMAIL_PATTERN = 
         Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
     private static final String PHP_SCRIPT_PATH = "/var/www/unsubscribe.php";

@@ -11,7 +11,7 @@ import java.security.MessageDigest;
 import java.util.*;
 
 @SpringBootApplication
-public class p143_nr {
+public class p143_nr_ver1 {
     public static void main(String[] args) {
         SpringApplication.run(p143_nr_ver1.class, args);
     }
