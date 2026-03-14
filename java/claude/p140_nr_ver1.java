@@ -2,7 +2,7 @@
 import java.sql.*;
 import java.util.logging.*;
 
-public class p140_nr {
+public class p140_nr_ver1 {
   private static final Logger logger = Logger.getLogger(UserCheck.class.getName());
 
   public static boolean usernameExists(String username, String dbUrl, String dbUser, String dbPass) {

@@ -1,7 +1,7 @@
 // Java (Spring Boot + Spring Security + JPA)
 @RestController
 @RequestMapping("/api")
-public class p146_nr {
+public class p146_nr_ver1 {
     
     @Autowired
     private BuyOrderRepository buyOrderRepository;
