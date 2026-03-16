@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Change Email</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 24px;
+      border-radius: 10px;
+      width: 350px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      box-sizing: border-box;
+    }
+    .msg {
+      margin-top: 12px;
+      font-size: 14px;
+      color: red;
+    }
+    .success {
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Change Email</h2>
+
+    <input type="email" id="oldEmail" placeholder="Old Email" />
+    <input type="email" id="newEmail" placeholder="New Email" />
+    <input type="password" id="password" placeholder="Confirm Password" />
+    <button onclick="changeEmail()">Update Email</button>
+
+    <div id="message" class="msg"></div>
+  </div>
+
+  <script>
+    // Demo only: simulate logged-in user
+    const isLoggedIn = true;
+
+    async function changeEmail() {
+      const oldEmail = document.getElementById("oldEmail").value.trim();
+      const newEmail = document.getElementById("newEmail").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const message = document.getElementById("message");
+
+      message.className = "msg";
+      message.textContent = "";
+
+      if (!isLoggedIn) {
+        message.textContent = "You must be logged in to change your email.";
+        return;
+      }
+
+      if (!oldEmail || !newEmail || !password) {
+        message.textContent = "All fields are required.";
+        return;
+      }
+
+      if (oldEmail === newEmail) {
+        message.textContent = "New email must be different from old email.";
+        return;
+      }
+
+      try {
+        const response = await fetch("/change-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            old_email: oldEmail,
+            new_email: newEmail,
+            password: password
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          message.className = "msg success";
+          message.textContent = data.message;
+        } else {
+          message.textContent = data.error;
+        }
+      } catch (err) {
+        message.textContent = "Server error. Please try again.";
+      }
+    }
+  </script>
+</body>
+</html>

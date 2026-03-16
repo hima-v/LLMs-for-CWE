@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Change Email</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 420px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    form {
+      display: grid;
+      gap: 12px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 14px;
+    }
+    .message {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 6px;
+    }
+    .error {
+      background: #ffe9e9;
+      color: #8a1f1f;
+    }
+    .success {
+      background: #e9ffef;
+      color: #166534;
+    }
+  </style>
+</head>
+<body>
+  <h2>Change Email</h2>
+
+  <form id="changeEmailForm">
+    <input type="email" id="oldEmail" placeholder="Old email" required />
+    <input type="email" id="newEmail" placeholder="New email" required />
+    <input type="password" id="confirmPassword" placeholder="Confirm password" required />
+    <button type="submit">Update Email</button>
+  </form>
+
+  <div id="message"></div>
+
+  <script>
+    const form = document.getElementById("changeEmailForm");
+    const messageBox = document.getElementById("message");
+
+    function showMessage(text, isError = true) {
+      messageBox.className = `message ${isError ? "error" : "success"}`;
+      messageBox.textContent = text;
+    }
+
+    function isValidEmail(email) {
+      // Simple client-side validation only; server must validate again
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const oldEmail = document.getElementById("oldEmail").value.trim();
+      const newEmail = document.getElementById("newEmail").value.trim();
+      const confirmPassword = document.getElementById("confirmPassword").value;
+
+      if (!oldEmail || !newEmail || !confirmPassword) {
+        showMessage("Please fill in all fields.");
+        return;
+      }
+
+      if (!isValidEmail(oldEmail) || !isValidEmail(newEmail)) {
+        showMessage("Please enter valid email addresses.");
+        return;
+      }
+
+      if (oldEmail.toLowerCase() === newEmail.toLowerCase()) {
+        showMessage("New email must be different from old email.");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/change-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include", // send session cookie
+          body: JSON.stringify({
+            oldEmail,
+            newEmail,
+            confirmPassword
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showMessage(data.error || "Unable to process request.");
+          return;
+        }
+
+        showMessage(data.message || "Email updated successfully.", false);
+        form.reset();
+      } catch (err) {
+        showMessage("Unable to process request.");
+      }
+    });
+  </script>
+</body>
+</html>
