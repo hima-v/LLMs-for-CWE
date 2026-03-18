@@ -1,0 +1,262 @@
+{
+  "version": "v2.8.0",
+  "id": "e1cbef9e-65fb-478b-a6ef-9c1626acce94",
+  "repositoryID": "00000000-0000-0000-0000-000000000000",
+  "repositoryName": "",
+  "workspaceID": "00000000-0000-0000-0000-000000000000",
+  "workspaceName": "",
+  "status": "success",
+  "errors": "",
+  "createdAt": "2026-03-16T23:03:56.979864-07:00",
+  "finishedAt": "2026-03-16T23:03:57.101838-07:00",
+  "analysisVulnerabilities": [
+    {
+      "vulnerabilityID": "00000000-0000-0000-0000-000000000000",
+      "analysisID": "e1cbef9e-65fb-478b-a6ef-9c1626acce94",
+      "createdAt": "2026-03-16T23:03:57.101839-07:00",
+      "vulnerabilities": {
+        "vulnerabilityID": "9bdffd72-7d20-4e48-85a2-2d227a0312e3",
+        "line": "0",
+        "column": "0",
+        "confidence": "MEDIUM",
+        "file": "gemini/p136.sql",
+        "code": "",
+        "details": "(1/1) * Possible vulnerability detected: Hard-coded password\nThe software contains hard-coded credentials, such as a password or cryptographic key, which it uses for its own inbound authentication, outbound communication to external components, or encryption of internal data. For more information checkout the CWE-798 (https://cwe.mitre.org/data/definitions/798.html) advisory.",
+        "securityTool": "HorusecEngine",
+        "language": "Leaks",
+        "severity": "CRITICAL",
+        "type": "Vulnerability",
+        "commitAuthor": "-",
+        "commitEmail": "-",
+        "commitHash": "-",
+        "commitMessage": "-",
+        "commitDate": "-",
+        "rule_id": "HS-LEAKS-26",
+        "vulnHash": "6fc4ef625f029246986dd8cc279de16d175e037db94dc84ccb193bb2fcae8233",
+        "deprecatedHashes": [
+          "e8f4f115d0dbf6cd41642c6d3e9b42fcaed82b719f24d21b202fe57a0417fe9c",
+          "325b7f3f4115a1a6e82bb93fc6195ed7f570219c7839f7c167c872e302fae1f8"
+        ],
+        "securityToolVersion": "",
+        "securityToolInfoUri": ""
+      }
+    },
+    {
+      "vulnerabilityID": "00000000-0000-0000-0000-000000000000",
+      "analysisID": "e1cbef9e-65fb-478b-a6ef-9c1626acce94",
+      "createdAt": "2026-03-16T23:03:57.101845-07:00",
+      "vulnerabilities": {
+        "vulnerabilityID": "8d151a35-7601-4473-8b9f-c35191d708ee",
+        "line": "1",
+        "column": "54",
+        "confidence": "MEDIUM",
+        "file": "gemini/p54.sql",
+        "code": "SELECT 1 FROM users WHERE username = 'input_user' AND password = 'input_pass';",
+        "details": "(1/1) * Possible vulnerability detected: Hard-coded password\nThe software contains hard-coded credentials, such as a password or cryptographic key, which it uses for its own inbound authentication, outbound communication to external components, or encryption of internal data. For more information checkout the CWE-798 (https://cwe.mitre.org/data/definitions/798.html) advisory.",
+        "securityTool": "HorusecEngine",
+        "language": "Leaks",
+        "severity": "CRITICAL",
+        "type": "Vulnerability",
+        "commitAuthor": "-",
+        "commitEmail": "-",
+        "commitHash": "-",
+        "commitMessage": "-",
+        "commitDate": "-",
+        "rule_id": "HS-LEAKS-26",
+        "vulnHash": "273154bdae0086dd56b560017f092d4fd6cb2077999284cf77c9e36765d098cb",
+        "deprecatedHashes": [
+          "f23d05876d2f017420e25a0faf94da86b80e08a2916d42f84eece8b96ff1689c",
+          "67c6e76e9a72bbfd90d2e77021b2bec89880979c19114d4010d96062f981396a"
+        ],
+        "securityToolVersion": "",
+        "securityToolInfoUri": ""
+      }
+    },
+    {
+      "vulnerabilityID": "00000000-0000-0000-0000-000000000000",
+      "analysisID": "e1cbef9e-65fb-478b-a6ef-9c1626acce94",
+      "createdAt": "2026-03-16T23:03:57.101846-07:00",
+      "vulnerabilities": {
+        "vulnerabilityID": "b49b85f4-6ffb-4787-a685-2ec607af5613",
+        "line": "3",
+        "column": "42",
+        "confidence": "MEDIUM",
+        "file": "gemini/p57.sql",
+        "code": "WHERE email = 'old_email@example.com' AND password = 'confirm_password';",
+        "details": "(1/1) * Possible vulnerability detected: Hard-coded password\nThe software contains hard-coded credentials, such as a password or cryptographic key, which it uses for its own inbound authentication, outbound communication to external components, or encryption of internal data. For more information checkout the CWE-798 (https://cwe.mitre.org/data/definitions/798.html) advisory.",
+        "securityTool": "HorusecEngine",
+        "language": "Leaks",
+        "severity": "CRITICAL",
+        "type": "Vulnerability",
+        "commitAuthor": "-",
+        "commitEmail": "-",
+        "commitHash": "-",
+        "commitMessage": "-",
+        "commitDate": "-",
+        "rule_id": "HS-LEAKS-26",
+        "vulnHash": "aae984b1549cf1b363b988f940118b98acab15591f45b7407d187e010f155b81",
+        "deprecatedHashes": [
+          "4a73c4b0d03fac0560728cf1a111cc9e30a48546092ae17e5d19463ef5d45181",
+          "6f0e8ecaf801727e067ae27d820f39b37a0671827a9753ed60f5c1a9ee11ee95"
+        ],
+        "securityToolVersion": "",
+        "securityToolInfoUri": ""
+      }
+    },
+    {
+      "vulnerabilityID": "00000000-0000-0000-0000-000000000000",
+      "analysisID": "e1cbef9e-65fb-478b-a6ef-9c1626acce94",
+      "createdAt": "2026-03-16T23:03:57.101847-07:00",
+      "vulnerabilities": {
+        "vulnerabilityID": "69b3ae9f-bcbe-4abc-8485-2e556e180f7a",
+        "line": "8",
+        "column": "6",
+        "confidence": "MEDIUM",
+        "file": "gemini/p137.sql",
+        "code": "AND password = 'hashed_password'",
+        "details": "(1/1) * Possible vulnerability detected: Hard-coded password\nThe software contains hard-coded credentials, such as a password or cryptographic key, which it uses for its own inbound authentication, outbound communication to external components, or encryption of internal data. For more information checkout the CWE-798 (https://cwe.mitre.org/data/definitions/798.html) advisory.",
+        "securityTool": "HorusecEngine",
+        "language": "Leaks",
+        "severity": "CRITICAL",
+        "type": "Vulnerability",
+        "commitAuthor": "-",
+        "commitEmail": "-",
+        "commitHash": "-",
+        "commitMessage": "-",
+        "commitDate": "-",
+        "rule_id": "HS-LEAKS-26",
+        "vulnHash": "2dfe5f7fdfa0b3d76dc572e4c0f04150b2c7caafcab76a83b3958a48052da02a",
+        "deprecatedHashes": [
+          "797d7c7fb3c3edc77d1551b1be621f478d8ac695a756f0b258cb8a83738b98a0",
+          "e498edaaf059040c52010ce847ea4d1315a7512ee6e23cd8b67cd1c7f03959a6"
+        ],
+        "securityToolVersion": "",
+        "securityToolInfoUri": ""
+      }
+    },
+    {
+      "vulnerabilityID": "00000000-0000-0000-0000-000000000000",
+      "analysisID": "e1cbef9e-65fb-478b-a6ef-9c1626acce94",
+      "createdAt": "2026-03-16T23:03:57.101849-07:00",
+      "vulnerabilities": {
+        "vulnerabilityID": "1dba2b40-50cf-4115-9c76-0848e029a862",
+        "line": "3",
+        "column": "47",
+        "confidence": "MEDIUM",
+        "file": "gemini/p58.sql",
+        "code": "WHERE id = 1 AND email = 'old@example.com' AND password = 'hashed_password';",
+        "details": "(1/1) * Possible vulnerability detected: Hard-coded password\nThe software contains hard-coded credentials, such as a password or cryptographic key, which it uses for its own inbound authentication, outbound communication to external components, or encryption of internal data. For more information checkout the CWE-798 (https://cwe.mitre.org/data/definitions/798.html) advisory.",
+        "securityTool": "HorusecEngine",
+        "language": "Leaks",
+        "severity": "CRITICAL",
+        "type": "Vulnerability",
+        "commitAuthor": "-",
+        "commitEmail": "-",
+        "commitHash": "-",
+        "commitMessage": "-",
+        "commitDate": "-",
+        "rule_id": "HS-LEAKS-26",
+        "vulnHash": "6b175fbc07a44798c990642c0f4650a9fd17e92341c2bbb57a46b60d9f4f05ce",
+        "deprecatedHashes": [
+          "a812e07a24d5ca9a818e448bd3f18ef4c30d4e97307969fb68c2b4c09559a70e",
+          "2cd9681890e860b388249ef730920f3960e0ba197ac521659c5191a22d245f11"
+        ],
+        "securityToolVersion": "",
+        "securityToolInfoUri": ""
+      }
+    },
+    {
+      "vulnerabilityID": "00000000-0000-0000-0000-000000000000",
+      "analysisID": "e1cbef9e-65fb-478b-a6ef-9c1626acce94",
+      "createdAt": "2026-03-16T23:03:57.10185-07:00",
+      "vulnerabilities": {
+        "vulnerabilityID": "1a5eb0ec-85c0-464c-aff0-51e0a2b74ce3",
+        "line": "308",
+        "column": "3",
+        "confidence": "MEDIUM",
+        "file": "claude/p39.sql",
+        "code": "-- Password: 'password123'",
+        "details": "(1/1) * Possible vulnerability detected: Hard-coded password\nThe software contains hard-coded credentials, such as a password or cryptographic key, which it uses for its own inbound authentication, outbound communication to external components, or encryption of internal data. For more information checkout the CWE-798 (https://cwe.mitre.org/data/definitions/798.html) advisory.",
+        "securityTool": "HorusecEngine",
+        "language": "Leaks",
+        "severity": "CRITICAL",
+        "type": "Vulnerability",
+        "commitAuthor": "-",
+        "commitEmail": "-",
+        "commitHash": "-",
+        "commitMessage": "-",
+        "commitDate": "-",
+        "rule_id": "HS-LEAKS-26",
+        "vulnHash": "a1244a8cac906ec86240412344c6c395cb638758e8cfa7edb0901f216d1b3fc4",
+        "deprecatedHashes": [
+          "3b8529b44428cf874ff03922eb612e23e84aa9324dee7d45d6763b6d8d4c1daf",
+          "55a8151d1b50cfd4fb4b78efccb93a50325b8f704a12e6a70c1bd65ec1389aed"
+        ],
+        "securityToolVersion": "",
+        "securityToolInfoUri": ""
+      }
+    },
+    {
+      "vulnerabilityID": "00000000-0000-0000-0000-000000000000",
+      "analysisID": "e1cbef9e-65fb-478b-a6ef-9c1626acce94",
+      "createdAt": "2026-03-16T23:03:57.101852-07:00",
+      "vulnerabilities": {
+        "vulnerabilityID": "514ac622-5df5-4c9e-a415-7067a73d4f2b",
+        "line": "0",
+        "column": "0",
+        "confidence": "MEDIUM",
+        "file": "gemini/p34.sql",
+        "code": "",
+        "details": "(1/1) * Possible vulnerability detected: Hard-coded password\nThe software contains hard-coded credentials, such as a password or cryptographic key, which it uses for its own inbound authentication, outbound communication to external components, or encryption of internal data. For more information checkout the CWE-798 (https://cwe.mitre.org/data/definitions/798.html) advisory.",
+        "securityTool": "HorusecEngine",
+        "language": "Leaks",
+        "severity": "CRITICAL",
+        "type": "Vulnerability",
+        "commitAuthor": "-",
+        "commitEmail": "-",
+        "commitHash": "-",
+        "commitMessage": "-",
+        "commitDate": "-",
+        "rule_id": "HS-LEAKS-26",
+        "vulnHash": "cafa3002c5c39afc381d3e5d04f2fcb3cd02ddc9c9173047538b5313e5f652be",
+        "deprecatedHashes": [
+          "02fd6a362baf39e7c00355471b9c9b624b4a901baea9a289a52c9258398e889e",
+          "da07d327bc3371bcdd29c504523e195bc78dc2ca56fead2d6bddb704cc482e9a"
+        ],
+        "securityToolVersion": "",
+        "securityToolInfoUri": ""
+      }
+    },
+    {
+      "vulnerabilityID": "00000000-0000-0000-0000-000000000000",
+      "analysisID": "e1cbef9e-65fb-478b-a6ef-9c1626acce94",
+      "createdAt": "2026-03-16T23:03:57.101853-07:00",
+      "vulnerabilities": {
+        "vulnerabilityID": "46b00e3a-a4fc-46d2-a018-e0f63ac7f9ca",
+        "line": "3",
+        "column": "34",
+        "confidence": "MEDIUM",
+        "file": "gemini/p37.sql",
+        "code": "WHERE username = 'input_user' AND password = 'input_password';",
+        "details": "(1/1) * Possible vulnerability detected: Hard-coded password\nThe software contains hard-coded credentials, such as a password or cryptographic key, which it uses for its own inbound authentication, outbound communication to external components, or encryption of internal data. For more information checkout the CWE-798 (https://cwe.mitre.org/data/definitions/798.html) advisory.",
+        "securityTool": "HorusecEngine",
+        "language": "Leaks",
+        "severity": "CRITICAL",
+        "type": "Vulnerability",
+        "commitAuthor": "-",
+        "commitEmail": "-",
+        "commitHash": "-",
+        "commitMessage": "-",
+        "commitDate": "-",
+        "rule_id": "HS-LEAKS-26",
+        "vulnHash": "65c6681c21b8f33049cdb23be81445065f5e014d8a28e146bf9eb554a57c5bef",
+        "deprecatedHashes": [
+          "2bffbe94609699e46fec4f15068a7e6899f9f86e306fdf0370e66f127f30f7fc",
+          "f941e63d669618e3378c636e8499e436bc6e20a7639bc06d44d8d0100ce6e96a"
+        ],
+        "securityToolVersion": "",
+        "securityToolInfoUri": ""
+      }
+    }
+  ]
+}
